@@ -52,7 +52,22 @@ async function run() {
     app.post("/WomenCloth", async (req, res) => {
       const newCoth = req.body;
       const result = await womenClothCollect.insertOne(newCoth);
-      
+      res.send(result);
+    });
+
+    // Kid cloth collection
+    const kidClothCollect = client.db("KidCloth").collection("ClothList");
+
+    app.get("/KidCloth", async (req, res) => {
+      const cursor = kidClothCollect.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/KidCloth", async (req, res) => {
+      const newCoth = req.body;
+      const result = await kidClothCollect.insertOne(newCoth);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
