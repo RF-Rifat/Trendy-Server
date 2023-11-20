@@ -50,7 +50,9 @@ async function run() {
     });
 
     app.post("/WomenCloth", async (req, res) => {
-      const newCoth = req.body
+      const newCoth = req.body;
+      const result = await womenClothCollect.insertOne(newCoth);
+      
     });
 
     // Send a ping to confirm a successful connection
