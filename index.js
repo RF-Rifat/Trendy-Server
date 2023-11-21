@@ -41,32 +41,56 @@ async function run() {
     });
 
     // Women cloth collection
-    const womenClothCollect = client.db("WomenCloth").collection("ClothList");
+    const womenClothCollect = client.db("TrendyBrand").collection("womenCloth");
 
-    app.get("/WomenCloth", async (req, res) => {
+    app.get("/womenCloth", async (req, res) => {
       const cursor = womenClothCollect.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    app.post("/WomenCloth", async (req, res) => {
+    app.post("/womenCloth", async (req, res) => {
       const newCoth = req.body;
       const result = await womenClothCollect.insertOne(newCoth);
       res.send(result);
     });
 
     // Kid cloth collection
-    const kidClothCollect = client.db("KidCloth").collection("ClothList");
+    const kidClothCollect = client.db("TrendyBrand").collection("kidCloth");
 
-    app.get("/KidCloth", async (req, res) => {
+    app.get("/kidCloth", async (req, res) => {
       const cursor = kidClothCollect.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    app.post("/KidCloth", async (req, res) => {
+    app.post("/kidCloth", async (req, res) => {
       const newCoth = req.body;
       const result = await kidClothCollect.insertOne(newCoth);
+      res.send(result);
+    });
+
+
+    // User cart data collection
+    const userCartCollection = client.db("TrendyBrand").collection("userCartData");
+
+    app.get("/userCartData", async (req, res) => {
+      const cursor = userCartCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/userCartData", async (req, res) => {
+      const user = req.body;
+      const result = await userCartCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.delete("/userCartData/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) };
+      const result = await userCartCollection.deleteOne(query);
       res.send(result);
     });
 
