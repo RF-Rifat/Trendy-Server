@@ -11,7 +11,6 @@ app.use(express.json());
 console.log(process.env.DB_USER);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tryvron.mongodb.net/?retryWrites=true&w=majority`;
-
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -20,82 +19,29 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    const brandCollection = client.db("TrendyBrand").collection("brandList");
+    // await client.connect();
 
-    // brand Api
-    app.get("/brand", async (req, res) => {
-      const cursor = brandCollection.find();
+    // Service Card Collections
+    const serviceCollection = client.db("serviceData").collection("cardList");
+
+    app.get("/serviceData", async (req, res) => {
+      const cursor = serviceCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    app.post("/brand", async (req, res) => {
-      const newBrand = req.body;
-      const result = await brandCollection.insertOne(newBrand);
-      res.send(result);
-    });
-
-    // Women cloth collection
-    const womenClothCollect = client.db("TrendyBrand").collection("womenCloth");
-
-    app.get("/womenCloth", async (req, res) => {
-      const cursor = womenClothCollect.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
-    app.post("/womenCloth", async (req, res) => {
-      const newCoth = req.body;
-      const result = await womenClothCollect.insertOne(newCoth);
-      res.send(result);
-    });
-
-    // Kid cloth collection
-    const kidClothCollect = client.db("TrendyBrand").collection("kidCloth");
-
-    app.get("/kidCloth", async (req, res) => {
-      const cursor = kidClothCollect.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
-    app.post("/kidCloth", async (req, res) => {
-      const newCoth = req.body;
-      const result = await kidClothCollect.insertOne(newCoth);
-      res.send(result);
-    });
-
-
-    // User cart data collection
-    const userCartCollection = client.db("TrendyBrand").collection("userCartData");
-
-    app.get("/userCartData", async (req, res) => {
-      const cursor = userCartCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
-    app.post("/userCartData", async (req, res) => {
-      const user = req.body;
-      const result = await userCartCollection.insertOne(user);
-      res.send(result);
-    });
-
-    app.delete("/userCartData/:id", async (req, res) => {
-      const id = req.params.id;
-      console.log(id)
-      const query = { _id: new ObjectId(id) };
-      const result = await userCartCollection.deleteOne(query);
+    app.post("/serviceData", async (req, res) => {
+      const newService = req.body;
+      const result = await serviceCollection.insertOne(newService);
       res.send(result);
     });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
