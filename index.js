@@ -1,8 +1,8 @@
 const express = require("express");
+require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -13,10 +13,50 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
 app.use(cookieParser());
+app.use(express.json());
 
-console.log(process.env.DB_USER);
+//middlewares
+
+const logger = (req, res, next) => {
+  console.log("logIn info:", req.method, req.url);
+  next();
+};
+
+const verifyToken = (req, res, next) =>{
+  const token = req?.cookies?.token;
+  console.log('token in the middleware', token);
+
+  if(!token){
+      return res.status(401).send({message: 'unauthorized access'})
+  }
+  jwt.verify(token, process.env.SECRET_TOKEN, (err, decoded) =>{
+      if(err){
+          return res.status(401).send({message: 'unauthorized access'})
+      }
+      req.user = decoded;
+      next();
+  })
+
+
+
+  // const authHeader = req?.headers?.authorization;
+  // if (!authHeader) {
+  //   return res.status(401).send('Unauthorized access')
+  // }
+
+  // const token = authHeader.split(' ')[1];
+
+  // jwt.verify(token, process.env.SECRET_TOKEN, (error, decoded) => {
+  //   if (error) {
+  //     return res.status(403).send({
+  //       message: "forbidden access"
+  //     })
+  //   }
+  //   req.decoded = decoded
+  //   next();
+  // })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tryvron.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,7 +76,7 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.SECRET_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "2d",
       });
       res.cookie("token", token, {
         httpOnly: true,
@@ -124,8 +164,29 @@ async function run() {
     // Service Card Collections
     const serviceCollection = client.db("serviceData").collection("cardList");
 
-    app.get("/serviceData", async (req, res) => {
-      console.log("server Cookie:", req.cookies);
+    app.get("/serviceData", logger, verifyToken, async (req, res) => {
+      console.log("server email:", req.query.email);
+      console.log("user info:", req.user);
+      // if (req.user.email !== req.query.email) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
+
+      // Extract query parameters
+      const { category, search } = req.query;
+
+      // filter based on query parameters
+      const filter = {};
+
+      // If a category is specified, filter by it
+      if (category && category !== "all") {
+        filter.gender = category.toLowerCase();
+      }
+
+      //  filter by search value
+      if (search) {
+        filter.productTitle = { $regex: new RegExp(search, "i") };
+      }
+
       const cursor = serviceCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -148,12 +209,6 @@ async function run() {
       }
     });
 
-    app.post("/serviceData", async (req, res) => {
-      const newService = req.body;
-      const result = await serviceCollection.insertOne(newService);
-      res.send(result);
-    });
-
     // service product details Api
     app.get("/serviceData/:id", async (req, res) => {
       const id = req.params.id;
@@ -163,9 +218,7 @@ async function run() {
     });
 
     // service cart data api
-    const serviceCartCollection = client
-      .db("serviceData")
-      .collection("serviceCart");
+    const serviceCartCollection = client.db("serviceData").collection("serviceCart");
 
     app.get("/serviceCart", async (req, res) => {
       const cursor = serviceCartCollection.find();
